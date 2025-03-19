@@ -17,7 +17,7 @@ const contentTypes = [
 const options = <T>(
   method: "GET" | "POST" | "PUT" | "DELETE",
   data?: T,
-  token?: boolean,
+  token?: string,
   formData?: FormData
 ): RequestInit => {
   const headers: HeadersInit = formData

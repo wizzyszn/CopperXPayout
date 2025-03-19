@@ -1,6 +1,7 @@
 import { Scenes } from "telegraf";
-import { MySceneContext } from "../../utils/types";
+import { MySceneContext, sessionManager } from "../../utils/sessionManager";
 import { authenticateOtp } from "../../services/copperX.service";
+import { mainMenu } from "../../bot";
 
 const verifyCodeScene = new Scenes.BaseScene<MySceneContext>("verifyCodeScene");
 
@@ -39,13 +40,15 @@ verifyCodeScene.on("text", async (ctx) => {
       email: email as string,
       sid: sid as string,
     });
-    //console.log(response);
-    await ctx.reply("Successfully logged in!");
-    
-    // Store authentication status
-    ctx.session.isAuthenticated = true;
-    ctx.session.token = response.accessToken;
-    ctx.session.userInfo = response.user;
+    //Securely Store authentication status
+    if (response.accessToken) {
+      sessionManager.setToken(ctx, response.accessToken);
+      await ctx.reply("Successfully logged in!");
+      ctx.session.userInfo = response.user;
+      mainMenu(ctx)
+    } else {
+      await ctx.reply("Authentication successful, but no token was provided.");
+    }
 
     // Exit the scene after successful login
     return ctx.scene.leave();

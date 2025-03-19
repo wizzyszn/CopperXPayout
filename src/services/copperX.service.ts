@@ -1,4 +1,5 @@
-import { GeneralReturnInt, UserInfoInt } from "../utils/types";
+import { UserInfoInt } from "../utils/sessionManager";
+import { GeneralReturnInt } from "../utils/types";
 import { options, requestHandler, urlGenerator } from "./config";
 type RequestOtpReturnType = {
   email: string;
@@ -16,7 +17,7 @@ const requestOtp = (email: string) => {
   const url = urlGenerator("auth", "email-otp/request");
   return requestHandler<RequestOtpReturnType>(
     url,
-    options("POST", { email }, false)
+    options("POST", { email })
   );
 };
 // Autheticate Otp
@@ -32,8 +33,16 @@ const authenticateOtp = ({
   const url = urlGenerator("auth", "email-otp/authenticate");
   return requestHandler<VerifyOtpReturnType>(
     url,
-    options("POST", { email, otp, sid }, false)
+    options("POST", { email, otp, sid })
+  );
+};
+// Request User Profile
+const requestUserProfile = (token :string) => {
+  const url = urlGenerator("auth", "me");
+  return requestHandler<UserInfoInt>(
+    url,
+    options("GET",null,token)
   );
 };
 
-export { requestOtp, authenticateOtp };
+export { requestOtp, authenticateOtp , requestUserProfile};

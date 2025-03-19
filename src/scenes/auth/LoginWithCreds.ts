@@ -1,5 +1,5 @@
 import { Scenes } from "telegraf";
-import { MySceneContext } from "../../utils/types";
+import {MySceneContext} from "../../utils/sessionManager"
 import { requestOtp } from "../../services/copperX.service";
 
 const loginScene = new Scenes.BaseScene<MySceneContext>("login");
