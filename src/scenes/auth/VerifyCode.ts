@@ -24,7 +24,7 @@ verifyCodeScene.on("text", async (ctx) => {
   }
   
   const otp = Number(input);
-  const sid = ctx.session.sid;
+  const sid = sessionManager.DecryptData<string>(ctx.session.sid as string)
   const email = ctx.session.email;
   
   if (!sid || !email) {
@@ -43,9 +43,30 @@ verifyCodeScene.on("text", async (ctx) => {
     //Securely Store authentication status
     if (response.accessToken) {
       sessionManager.setToken(ctx, response.accessToken);
-      await ctx.reply("Successfully logged in!");
       ctx.session.userInfo = response.user;
-      mainMenu(ctx)
+      ctx.replyWithHTML(`Login successful!\n
+        Welcome to CopperX Bot,
+        ${response.user.email}!\n
+        I'm here to help you manage your CopperX account. Choose an option below:`, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "Profile", callback_data: "profile" },
+                { text: "KYC Status", callback_data: "kyc" },
+              ],
+              [
+                { text: "Wallets", callback_data: "wallets" },
+                { text: "Balance", callback_data: "balance" },
+              ],
+              [
+                { text: "Send Money", callback_data: "send" },
+                { text: "Deposit", callback_data: "deposit" },
+              ],
+              [{ text: "Transactions", callback_data: "transactions" }],
+              [{ text: "Logout", callback_data: "logout" }],
+            ],
+          },
+        })
     } else {
       await ctx.reply("Authentication successful, but no token was provided.");
     }
@@ -57,7 +78,8 @@ verifyCodeScene.on("text", async (ctx) => {
     console.error("OTP validation error:", err);
     
     return ctx.reply(
-      "An error occurred while validating your OTP. Please try again or type 'cancel' to exit."
+      `${err}\n
+      Please try again or type 'cancel' to exit.`
     );
   }
 });

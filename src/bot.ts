@@ -4,7 +4,12 @@ import { MySceneContext, sessionManager } from "./utils/sessionManager";
 import loginScene from "./scenes/auth/LoginWithCreds";
 import verifyCodeScene from "./scenes/auth/VerifyCode";
 import { rateLimiter, requireAuth } from "./middlewares/Auth";
-import { checkAuthStatus, getUserProfile } from "./commands/auth/AuthCommands";
+import { checkAuthStatus } from "./commands/auth/AuthCommands";
+import {
+  logout,
+  requestKYCstatus,
+  requestUserProfile,
+} from "./services/copperX.service";
 
 // Load environment variables first
 dotenv.config();
@@ -30,20 +35,9 @@ bot.use(rateLimiter);
 bot.use(stage.middleware());
 
 // Command handlers
-/*bot.start((ctx) => {
-  ctx.reply(
-    `👋 Welcome to Copperx Payout Bot!\n\n` +
-    `To get started, \n\n` +
-    `type /login to authenticate with email.\n\n` +
-    `type /google to authenticate using Google's OAuth.\n\n` +
-    `type /signup if You don't have an Account Sign Up`
-  );
-});
-*/ 
-
 // Main menu
-export const mainMenu =async (ctx : MySceneContext) =>{
-  await ctx.reply(`👋 Welcome to Copperx Payout Bot!\n\n`, {
+export const mainMenu = async (ctx: MySceneContext) => {
+  await ctx.editMessageText(`🏠 Main Menu - Choose an option:`, {
     reply_markup: {
       inline_keyboard: [
         [
@@ -63,21 +57,153 @@ export const mainMenu =async (ctx : MySceneContext) =>{
       ],
     },
   });
-}
+};
 bot.start((ctx) => {
-  const token = sessionManager.getToken(ctx)
-          const isAuthenticated = ctx.session.isAuthenticated;
-          if(token && isAuthenticated) {
-           mainMenu(ctx)  
-          }else{
-              ctx.reply("You are not logged in. Type /login to access your account.")
-          }
-
+  const token = sessionManager.getToken(ctx);
+  const isAuthenticated = ctx.session.isAuthenticated;
+  if (token && isAuthenticated) {
+    mainMenu(ctx);
+  } else {
+    ctx.reply(
+      `Welcome to copper X Bot!\n You need to log in before you can use this bot. \n Press the button below to log in:`,
+      {
+        reply_markup: {
+          inline_keyboard: [[{ text: "Login", callback_data: "login" }]],
+        },
+      }
+    );
+  }
 });
 
-// Add other command handlers
-bot.command("login", (ctx) => ctx.scene.enter("login"));
-getUserProfile(bot, requireAuth);
+// Add other command or action handlers
+// main menu
+bot.action("back_to_menu", async (ctx) => {
+  await ctx.answerCbQuery();
+  await mainMenu(ctx);
+});
+// login
+bot.action("login", async (ctx) => {
+  await ctx.answerCbQuery();
+  ctx.scene.enter("login");
+});
+//profile
+bot.action("profile", requireAuth, async (ctx) => {
+  await ctx.answerCbQuery();
+  const token = sessionManager.getToken(ctx);
+  try {
+    await ctx.reply("Requesting your Profile.......");
+    const response = await requestUserProfile(token as string);
+    ctx.replyWithHTML(
+      `
+      <b>Your CopperX Profile</b>\n
+      <b>Personal Details</b>\n
+       Email: ${response.email}\n
+       User ID: ${response.id}\n
+       Name : ${
+         response.firstName && response.lastName
+           ? `${response.firstName} ${response.lastName}`
+           : "Not set"
+       }\n\n
+       KYC Status: ${
+         response.status === "pending"
+           ? "pending"
+           : response.status === "active"
+           ? "active"
+           : "failed"
+       }
+      `,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "Check KYC Status", callback_data: "kyc_status" },
+              { text: "Manage Wallets", callback_data: "manage_wallet" },
+            ],
+            [{ text: "<< Back to Menu", callback_data: "back_to_menu" }],
+          ],
+        },
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    return ctx.reply("An error occurred while fetching your profile");
+  }
+});
+// check kyc status
+bot.action("kyc", requireAuth, async (ctx) => {
+  await ctx.answerCbQuery();
+  await ctx.reply("Checking your KYC status......");
+  const token = sessionManager.getToken(ctx);
+  try {
+    const response = await requestKYCstatus(token as string);
+    if (response.count < 1) {
+      return ctx.replyWithHTML(
+        `
+      <b>KYC Verification Status</b>\n\n
+      Current Status:  "PENDING"
+      `,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Complete KYC status", url: "https://copperx.io" }],
+              [
+                {
+                  text: "<< Back to Menu",
+                  callback_data: "back_to_menu",
+                },
+              ],
+            ],
+          },
+        }
+      );
+    } else {
+      return ctx.replyWithHTML(
+        `
+      <b>KYC Verification Status</b>\n\n
+      Current Status: "COMPLETED"
+      `,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "<< Back to Menu", callback_data: "menu" }],
+            ],
+          },
+        }
+      );
+    }
+  } catch (err) {
+    return ctx.reply(
+      `An Error ocurred while requesting for your KYC status..... ${err}`
+    );
+  }
+});
+//logout
+bot.action("logout", requireAuth, async (ctx) => {
+  await ctx.answerCbQuery();
+  const token = sessionManager.getToken(ctx);
+  try {
+    const response = await logout(token as string);
+    ctx.reply(
+      `
+        You have successfully logged out from your Copper X account"
+      `,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "Log in again", callback_data: "log_in_again" }],
+          ],
+        },
+      }
+    );
+    sessionManager.clearToken(ctx);
+  } catch (err) {
+    console.error(err);
+    ctx.reply(
+      `An error ocurred while we tried logging you out please try again later ${err}`
+    );
+  }
+});
+// session auth status
 checkAuthStatus(bot);
 
 // Error handling
@@ -86,20 +212,6 @@ bot.catch((err, ctx) => {
   ctx.reply(
     "An error occurred while processing your request. Please try again later."
   );
-});
-// Inline keyboard buttons
-bot.command("options", (ctx) => {
-  ctx.reply("What would you like to do?", {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "📊 View Statistics", callback_data: "stats" },
-          { text: "⚙️ Settings", callback_data: "settings" },
-        ],
-        [{ text: "📞 Contact Support", callback_data: "support" }],
-      ],
-    },
-  });
 });
 
 // Start the bot

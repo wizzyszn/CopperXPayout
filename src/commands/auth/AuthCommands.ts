@@ -6,12 +6,14 @@ export const loginCommand = (bot : Telegraf<MySceneContext>) =>{
         ctx.scene.enter("login")
     })
 }
-export const getUserProfile = (bot : Telegraf<MySceneContext>, middleware :Middleware<MySceneContext> ) =>{
+
+/*export const getUserProfile = (bot : Telegraf<MySceneContext>, middleware :Middleware<MySceneContext> ) =>{
     bot.command("profile",middleware,async (ctx) =>{
         const token = sessionManager.getToken(ctx);
         try{
             const response = await requestUserProfile(token as string);
-            ctx.reply(`${response}`)
+            console.log("response:", response)
+            ctx.reply(`${response}`);
         }catch(err){
             console.error(err);
             return ctx.reply(
@@ -21,9 +23,11 @@ export const getUserProfile = (bot : Telegraf<MySceneContext>, middleware :Middl
       
 
     })
-}
+} 
+*/
 export const checkAuthStatus = (bot : Telegraf<MySceneContext>) => {
-    bot.command("status", (ctx) =>{
+
+   return bot.command("status", (ctx) =>{
         const token = sessionManager.getToken(ctx)
         const isAuthenticated = ctx.session.isAuthenticated;
         if(token && isAuthenticated) {

@@ -10,7 +10,7 @@ interface UserInfoInt {
   profileImage: string;
   organizationId: string;
   role: "owner";
-  status: "pending";
+  status: "pending" | "active";
   type: "individual";
   relayerAddress: string;
   flags: string[];
@@ -113,6 +113,7 @@ export class sessionManager {
 
   // method to clear token
   static clearToken(ctx: MySceneContext): void {
+    delete ctx.session.token
     delete ctx.session.authData;
     ctx.session.isAuthenticated = false;
   }

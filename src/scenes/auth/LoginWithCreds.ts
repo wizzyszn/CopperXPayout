@@ -1,5 +1,5 @@
 import { Scenes } from "telegraf";
-import {MySceneContext} from "../../utils/sessionManager"
+import {MySceneContext, sessionManager} from "../../utils/sessionManager"
 import { requestOtp } from "../../services/copperX.service";
 
 const loginScene = new Scenes.BaseScene<MySceneContext>("login");
@@ -29,7 +29,7 @@ loginScene.on("text", async (ctx) => {
         "Failed to generate verification code. Please try again later."
       );
     }
-    ctx.session.sid = response.sid;
+    ctx.session.sid = sessionManager.EncryptData(response.sid) 
     await ctx.reply(
       "If this email is liked to our platform, you will get to a verification code (otp)"
     );

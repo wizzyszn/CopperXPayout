@@ -2,6 +2,7 @@ const baseUrl = "https://income-api.copperx.io/api";
 
 const routeBaseUrl = {
   auth: `${baseUrl}/auth`,
+  kyc: `${baseUrl}/kycs`,
 };
 
 // Backend server API client - optimized for server-side usage
@@ -34,7 +35,7 @@ const options = <T>(
     requestOptions.body = formData;
   } else if (data) {
     requestOptions.body = JSON.stringify(data);
-  } else if (["POST", "PUT"].includes(method)) {
+  } else if (["PUT"].includes(method)) {
     throw new Error(`Data must be provided for ${method} requests`);
   }
 
