@@ -1,6 +1,7 @@
 import { Scenes } from "telegraf";
 import * as crypto from "crypto";
 import dotenv from "dotenv";
+import { Networks } from "./types";
 dotenv.config();
 interface UserInfoInt {
   id: string;
@@ -27,7 +28,13 @@ interface MySession extends Scenes.SceneSession<Scenes.SceneSessionData> {
   authData?: AuthDataInt;
   userInfo?: UserInfoInt;
   expiresAt?: number;
-  token ? : string
+  token?: string;
+  walletData?: {
+    walletType: string;
+    walletId: string;
+    isDefault: boolean;
+    network : Networks
+  }[]
 }
 interface MySceneContext extends Scenes.SceneContext {
   session: MySession;
@@ -52,7 +59,7 @@ export class sessionManager {
 
   // method to encrypt sensitive data
   static EncryptData<T>(data: T): string {
-    const key = Buffer.from(process.env.AES_256_KEY as string, 'hex'); // 32-byte Buffer
+    const key = Buffer.from(process.env.AES_256_KEY as string, "hex"); // 32-byte Buffer
     const iv = crypto.randomBytes(16);
     const algo = "aes-256-ctr";
     const serializedData =
@@ -67,7 +74,7 @@ export class sessionManager {
 
   //method to decrypt stored sensitive data
   static DecryptData<T>(data: string): T {
-    const key = Buffer.from(process.env.AES_256_KEY as string, "hex")
+    const key = Buffer.from(process.env.AES_256_KEY as string, "hex");
     const [ivHex, encrypted] = data.split(":");
     const decipher = crypto.createDecipheriv(
       "aes-256-ctr",
@@ -113,12 +120,12 @@ export class sessionManager {
 
   // method to clear token
   static clearToken(ctx: MySceneContext): void {
-    delete ctx.session.token
+    delete ctx.session.token;
     delete ctx.session.authData;
     ctx.session.isAuthenticated = false;
   }
   // Check if rate limit is exceeded
-  static checkRateLimit(userId: string): boolean {
+ /* static checkRateLimit(userId: string): boolean {
     const now = Date.now();
     const userLimit = this.rateLimitMap.get(userId);
 
@@ -140,5 +147,5 @@ export class sessionManager {
     }
 
     return false;
-  }
+  } */
 }

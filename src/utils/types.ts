@@ -131,7 +131,13 @@ interface KycKybResponse {
   hasMore: boolean;
   data: KycKybData[];
 }
-
+type Networks =
+  | "Polygon"
+  | "Arbitrum"
+  | "Base"
+  | "Mode"
+  | "Starknet";
+type NetworkCoefficients = "137" | "42161" | "8453" | "23434" | "534352";
 interface GeneralReturnInt<T> {
   message: object | string;
   statusCode: number;
@@ -143,4 +149,4 @@ interface RejectInt {
   statusCode: 0;
   error?: "string";
 }
-export { GeneralReturnInt, RejectInt, KycKybResponse};
+export { GeneralReturnInt, RejectInt, KycKybResponse, Networks,NetworkCoefficients};

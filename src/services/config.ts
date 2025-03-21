@@ -3,6 +3,7 @@ const baseUrl = "https://income-api.copperx.io/api";
 const routeBaseUrl = {
   auth: `${baseUrl}/auth`,
   kyc: `${baseUrl}/kycs`,
+  wallets: `${baseUrl}/wallets`,
 };
 
 // Backend server API client - optimized for server-side usage

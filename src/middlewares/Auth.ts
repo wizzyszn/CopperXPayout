@@ -17,7 +17,7 @@ export const requireAuth = (ctx : MySceneContext, next : () => Promise<void>) =>
     return next()
 }
 
-export const rateLimiter = (ctx : Context, next : () => Promise<void>) =>{
+/*export const rateLimiter = (ctx : Context, next : () => Promise<void>) =>{
     const userId = ctx.from?.id.toString();
     if(!userId){
         return next();
@@ -27,4 +27,4 @@ export const rateLimiter = (ctx : Context, next : () => Promise<void>) =>{
         return
     }
     return next();
-}
+} */
