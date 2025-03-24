@@ -11,9 +11,10 @@ import {
   requestKYCstatus,
   requestUserProfile,
   setDefaultWallet,
+  transactionHistoryReq,
   viewBalances,
 } from "./services/copperX.service";
-import { NetworkCoefficients, Networks } from "./utils/types";
+import { NetworkCoefficients, Networks, TransactionsInt } from "./utils/types";
 
 // Load environment variables first
 dotenv.config();
@@ -89,15 +90,18 @@ bot.action("login", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.scene.enter("login");
 });
+bot.command("login", async (ctx) => {
+  ctx.scene.enter("login");
+});
 //profile
 bot.action("profile", requireAuth, async (ctx) => {
   await ctx.answerCbQuery();
   const token = sessionManager.getToken(ctx);
   try {
-    await ctx.reply("Requesting your Profile.......");
+    await ctx.reply("♻️ Requesting your Profile.......");
     const response = await requestUserProfile(token as string);
     ctx.replyWithHTML(
-      `<b>👤 Your CopperX Profile</b>\n\n<b>Personal Details</b>\n📧 Email: ${
+      `<b>👤 Your CopperX Profile</b>\n\n<b>Personal Details:</b>\n📧 Email: ${
         response.email
       }\n🆔 User ID: ${response.id}\n👤Name : ${
         response.firstName && response.lastName
@@ -115,8 +119,8 @@ bot.action("profile", requireAuth, async (ctx) => {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: "📖 Check KYC Status", callback_data: "kyc_status" },
-              { text: "🛅 Manage Wallets", callback_data: "manage_wallet" },
+              { text: "📖 Check KYC Status", callback_data: "kyc" },
+              { text: "🛅 Manage Wallets", callback_data: "wallets" },
             ],
             [{ text: "<< Back to Menu", callback_data: "back_to_menu" }],
           ],
@@ -138,12 +142,12 @@ bot.action("kyc", requireAuth, async (ctx) => {
     if (response.count < 1) {
       return ctx.replyWithHTML(
         `
-      <b>📖 KYC Verification Status</b>\n\nCurrent Status:  "🟡 PENDING"
+      <b>📖 KYC Verification Status</b>\n\nCurrent Status:  "🟡 PENDING\nYou need to complete your KYC verification on the Copperx platform to unlock all features of your account."
       `,
         {
           reply_markup: {
             inline_keyboard: [
-              [{ text: "📖 Complete KYC status", url: "https://copperx.io" }],
+              [{ text: "📖 Complete KYC", url: "https://copperx.io" }],
               [
                 {
                   text: "<< Back to Menu",
@@ -229,7 +233,7 @@ bot.action("wallets", requireAuth, async (ctx) => {
     );
   }
 });
-bot.action("list_wallets", async (ctx) => {
+bot.action("list_wallets", requireAuth, async (ctx) => {
   await ctx.answerCbQuery();
   const walletData = ctx.session.walletData;
   if (!walletData || walletData.length < 1) {
@@ -258,8 +262,8 @@ bot.action("list_wallets", async (ctx) => {
     }
   );
 });
-//set default wallets
-bot.action(/select_wallet:(.+)/, async (ctx) => {
+//set default wallet
+bot.action(/select_wallet:(.+)/, requireAuth, async (ctx) => {
   await ctx.answerCbQuery();
   const walletId = ctx.match[1];
   try {
@@ -301,7 +305,7 @@ bot.action(/select_wallet:(.+)/, async (ctx) => {
   }
 });
 // View Balances
-bot.action("view_balances", async (ctx) => {
+bot.action("view_balances", requireAuth, async (ctx) => {
   await ctx.answerCbQuery();
   await ctx.reply("🔃 Fetching wallet balances....");
   try {
@@ -336,6 +340,110 @@ bot.action("view_balances", async (ctx) => {
     );
   }
 });
+//Get transactions
+bot.action("transactions", async (ctx) => {
+  await ctx.answerCbQuery();
+  const generateHistoryText = (history: TransactionsInt): string => {
+    const { data, count, page, limit } = history;
+
+    let text = `📋 *Transaction History*\n`;
+    text += `Showing ${Math.min(
+      data.length,
+      limit
+    )} of ${count} transactions\n\n`;
+
+    data.forEach((item, index) => {
+      // Transaction header with type and status
+      text += `*${index + 1}. ${item.type.toUpperCase()} - ${item.status}*\n`;
+
+      // Date
+      const date = new Date(item.createdAt).toLocaleDateString();
+      text += `📅 Date: ${date}\n`;
+
+      // Amount and currency
+      text += `💰 Amount: ${item.amount} ${item.currency}\n`;
+
+      // Fees if applicable
+      if (item.totalFee && parseFloat(item.totalFee) > 0) {
+        text += `💸 Fee: ${item.totalFee} ${item.feeCurrency}\n`;
+      }
+
+      // Source/destination details
+      if (item.sourceAccount) {
+        text += `📤 From: ${
+          item.sourceAccount.payeeDisplayName || "Unknown"
+        }\n`;
+      }
+
+      if (item.destinationAccount) {
+        text += `📥 To: ${
+          item.destinationAccount.payeeDisplayName || "Unknown"
+        }\n`;
+      }
+
+      // Transaction ID
+      text += `🔢 ID: ${item.id.substring(0, 8)}...\n`;
+
+      // Add separator between transactions
+      text += `\n${index < data.length - 1 ? "───────────────────\n\n" : ""}`;
+    });
+
+    // Pagination info
+    if (count > limit) {
+      text += `\nPage ${page} of ${Math.ceil(count / limit)}`;
+    }
+
+    return text;
+  };
+  try {
+    const token = sessionManager.getToken(ctx);
+    await ctx.reply("🔃 Fetching your transaction history.....");
+    const response = await transactionHistoryReq(token as string);
+    const history = response.data;
+    if (history.length < 1) {
+      return ctx.reply(
+        `❌ No transation found. Start by sending or receiving USDC.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "💰 Check Balance", callback_data: "view_balances" }],
+              [{ text: "📤 Send USDC", callback_data: "send_usdc" }],
+            ],
+          },
+        }
+      );
+    } else {
+      const text = generateHistoryText(response);
+      return ctx.reply(text, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "◀️ Previous",
+                callback_data: `history_${Math.max(1, response.page - 1)}`,
+              },
+              {
+                text: "Next ▶️",
+                callback_data: `history_${response.page + 1}`,
+              },
+            ],
+            [
+              { text: "Check Balance", callback_data: "view_balances" },
+              { text: "📤 Send USDC", callback_data: "send_usdc" },
+            ],
+          ],
+        },
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.reply(
+      `An Error occured while trying to fetch your transaction history\n${err}`
+    );
+  }
+});
+
 //logout
 bot.action("logout", requireAuth, async (ctx) => {
   await ctx.answerCbQuery();

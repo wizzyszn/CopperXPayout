@@ -1,10 +1,11 @@
 import { Context } from "telegraf";
 import { MySceneContext, sessionManager } from "../utils/sessionManager";
 
-export const requireAuth = (ctx : MySceneContext, next : () => Promise<void>) =>{
+export const requireAuth = async (ctx : MySceneContext, next : () => Promise<void>) =>{
+    await ctx.answerCbQuery();
       // Check if user is authenticated
     if(!ctx.session.isAuthenticated){
-        ctx.reply("Your session has expired. Use /login to authenticate.")
+        ctx.reply("⚠️ Your session has expired. Use /login to access your account.")
         return
     }
     // Check if token is still valid

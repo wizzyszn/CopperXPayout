@@ -46,7 +46,7 @@ verifyCodeScene.on("text", async (ctx) => {
       sessionManager.setToken(ctx, response.accessToken);
       ctx.session.userInfo = response.user;
       ctx.replyWithHTML(
-        `🎊 Login successful!\n🚀 Welcome to CopperX Bot, ${response.user.email}!\nI'm here to help you manage your CopperX account. Choose an option below:`,
+        `🎊 Login successful!\n\n🚀 Welcome to CopperX Bot, ${response.user.email}!\n\nI'm here to help you manage your CopperX account. Choose an option below:`,
         {
           reply_markup: {
             inline_keyboard: [

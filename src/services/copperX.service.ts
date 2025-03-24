@@ -4,6 +4,7 @@ import {
   KycKybResponse,
   NetworkCoefficients,
   Networks,
+  TransactionsInt,
 } from "../utils/types";
 import { options, requestHandler, urlGenerator } from "./config";
 type RequestOtpReturnType = {
@@ -97,6 +98,11 @@ const viewBalances = (token: string) => {
     }[]
   >(url, options("GET", null, token));
 };
+// Request Transaction history
+const transactionHistoryReq = (token : string,page  = 1, limit = 10) =>{
+  const url = urlGenerator("transfers","",false,`limit=${limit}&page=${page}`);
+  return requestHandler<TransactionsInt>(url,options("GET",null,token));
+}
 // Logout
 const logout = (token: string) => {
   const url = urlGenerator("auth", "logout");
@@ -115,4 +121,5 @@ export {
   getWallets,
   setDefaultWallet,
   viewBalances,
+  transactionHistoryReq
 };

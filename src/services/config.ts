@@ -4,6 +4,7 @@ const routeBaseUrl = {
   auth: `${baseUrl}/auth`,
   kyc: `${baseUrl}/kycs`,
   wallets: `${baseUrl}/wallets`,
+  transfers: `${baseUrl}/transfers`,
 };
 
 // Backend server API client - optimized for server-side usage
