@@ -4,6 +4,8 @@ import {
   KycKybResponse,
   NetworkCoefficients,
   Networks,
+  Payee,
+  PayeeResponse,
   TransactionsInt,
 } from "../utils/types";
 import { options, requestHandler, urlGenerator } from "./config";
@@ -99,10 +101,46 @@ const viewBalances = (token: string) => {
   >(url, options("GET", null, token));
 };
 // Request Transaction history
-const transactionHistoryReq = (token : string,page  = 1, limit = 10) =>{
-  const url = urlGenerator("transfers","",false,`limit=${limit}&page=${page}`);
-  return requestHandler<TransactionsInt>(url,options("GET",null,token));
-}
+const transactionHistoryReq = (token: string, page = 1, limit = 10) => {
+  const url = urlGenerator(
+    "transfers",
+    "",
+    false,
+    `limit=${limit}&page=${page}`
+  );
+  return requestHandler<TransactionsInt>(url, options("GET", null, token));
+};
+//Get all the list of payees
+const getAllPayees = (token: string, page = 1, limit = 10) => {
+  const url = urlGenerator("payees", "", false, `limit=${limit}&page=${page}`);
+  return requestHandler<PayeeResponse>(url, options("GET", null, token));
+};
+// Add a payee
+const addPayee = (
+  token: string,
+  data: {
+    nickName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    bankAccount: {
+      country: string;
+      bankName: string;
+      bankAddress: string;
+      type: "web3_wallet";
+      bankAccountType: "savings" | "checking";
+      bankRoutingNumber: string;
+      bankAccountNumber: string;
+      bankBeneficiaryName: string;
+      bankBeneficiaryAddress: string;
+      swiftCode: string;
+    };
+  }
+) => {
+  const url = urlGenerator("payees", "", false);
+  return requestHandler<Payee>(url, options("POST", data, token));
+};
 // Logout
 const logout = (token: string) => {
   const url = urlGenerator("auth", "logout");
@@ -121,5 +159,7 @@ export {
   getWallets,
   setDefaultWallet,
   viewBalances,
-  transactionHistoryReq
+  transactionHistoryReq,
+  getAllPayees,
+  addPayee
 };

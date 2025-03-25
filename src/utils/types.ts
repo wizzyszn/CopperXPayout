@@ -265,10 +265,68 @@ interface TransactionsInt {
   hasMore: boolean;
   data: DataItem[];
 }
+interface PayeeResponse {
+  page: number;
+  limit: number;
+  count: number;
+  hasMore: boolean;
+  data: {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    organizationId: string;
+    nickName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    displayName: string;
+    bankAccount?: {
+      country: string;
+      bankName: string;
+      bankAddress: string;
+      type: "web3_wallet";
+      bankAccountType: "savings" | "checking";
+      bankRoutingNumber: string;
+      bankAccountNumber: string;
+      bankBeneficiaryName: string;
+      bankBeneficiaryAddress: string;
+      swiftCode: string;
+    };
+    isGuest: boolean;
+    hasBankAccount: boolean;
+  }[];
+}
+interface Payee {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  organizationId: string;
+  nickName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  displayName: string;
+  bankAccount: {
+    country: string;
+    bankName: string;
+    bankAddress: string;
+    type: "web3_wallet";
+    bankAccountType: "savings" | "checking";
+    bankRoutingNumber: string;
+    bankAccountNumber: string;
+    bankBeneficiaryName: string;
+    bankBeneficiaryAddress: string;
+    swiftCode: string;
+  };
+  isGuest: boolean;
+  hasBankAccount: boolean;
+}
 
 interface RejectInt {
   message: object | string;
   statusCode: 0;
   error?: "string";
 }
-export { GeneralReturnInt, RejectInt, KycKybResponse, Networks,NetworkCoefficients,TransactionsInt};
+export { GeneralReturnInt, RejectInt, KycKybResponse, Networks,NetworkCoefficients,TransactionsInt, PayeeResponse,Payee};

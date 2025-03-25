@@ -6,6 +6,7 @@ import verifyCodeScene from "./scenes/auth/VerifyCode";
 import { requireAuth } from "./middlewares/Auth";
 import { checkAuthStatus } from "./commands/auth/AuthCommands";
 import {
+  getAllPayees,
   getWallets,
   logout,
   requestKYCstatus,
@@ -53,8 +54,8 @@ export const mainMenu = async (ctx: MySceneContext) => {
           { text: "💰 Balance", callback_data: "view_balances" },
         ],
         [
-          { text: "📤 Send Money", callback_data: "send" },
-          { text: "📥 Deposit", callback_data: "deposit" },
+          { text: "📤 Send Money", callback_data: "send_money" },
+          { text: "📥 Deposit", callback_data: "deposit_money" },
         ],
         [{ text: "📒 Transactions", callback_data: "transactions" }],
         [{ text: "🔒 Logout", callback_data: "logout" }],
@@ -443,7 +444,57 @@ bot.action("transactions", async (ctx) => {
     );
   }
 });
+bot.command("send_money", async (ctx) => {
+  await ctx.answerCbQuery();
+  ctx.editMessageText(
+    `📤 Send Money
+\n👇 Choose how you'd like to send funds:`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Send to Email", callback_data: "send_via_email" }],
+          [{ text: "Send to Wallet", callback_data: "send_to_wallet" }],
+          [{ text: "Bank Withdraw", callback_data: "bank_withdraw" }],
+          [{ text: "<< Back to Menu", callback_data: "back_to_menu" }],
+        ],
+      },
+    }
+  );
+});
 
+bot.action("send_via_email", async (ctx) => {
+  await ctx.answerCbQuery();
+  await ctx.reply("Fetching your payees...");
+  try {
+    const token = sessionManager.getToken(ctx);
+    const response = await getAllPayees(token as string);
+    const payees = response.data;
+    if (payees.length < 1) {
+      return ctx.replyWithHTML(
+        `<b>📭 No Payees Found
+</b>\nYou need to add a payee before sending USDC via email. Use /addpayee to add one now.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Add Payee", callback_data: "add_payee" }],
+            ],
+          },
+        }
+      );
+    }else{
+      //do somehtitng here...
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.reply(`Something went wrong while fetching your payees.... ${err}`);
+  }
+});
+// Add a payee
+bot.action("add_payee", async (ctx) =>{
+  await ctx.answerCbQuery();
+  
+
+})
 //logout
 bot.action("logout", requireAuth, async (ctx) => {
   await ctx.answerCbQuery();

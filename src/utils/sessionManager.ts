@@ -2,6 +2,7 @@ import { Scenes } from "telegraf";
 import * as crypto from "crypto";
 import dotenv from "dotenv";
 import { Networks } from "./types";
+import { WizardContext, WizardSessionData } from "telegraf/typings/scenes";
 dotenv.config();
 interface UserInfoInt {
   id: string;
@@ -39,6 +40,7 @@ interface MySession extends Scenes.SceneSession<Scenes.SceneSessionData> {
 interface MySceneContext extends Scenes.SceneContext {
   session: MySession;
 }
+
 interface AuthDataInt {
   token: string;
   expiresAt: number;
