@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test",
-    "start": "npx ts-node src/bot.ts"
+    "boot": "npx ts-node src/bot.ts",
+    "start": "npm run start",
+    "build" : "npm run build"
+    
   },
   "repository": {
     "type": "git",
