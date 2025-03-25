@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "Telegram Bot for CopperXPayout which will enable users to deposit, withdraw, and transfer USDC directly through Telegram without visiting their web app.",
   "main": "index.js",
-  "scripts": {
-    "test": "npm run test",
-    "boot": "npx ts-node src/bot.ts",
-    "start": "npm run start",
-    "build" : "npm run build"
-    
-  },
+  
+    "scripts": {
+      "build": "npx tsc",
+      "start": "node dist/index.js",
+      "dev": "ts-node src/index.ts"
+    }
+  ,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wizzyszn/CopperXPayout.git"

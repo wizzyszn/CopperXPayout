@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2020",              // JavaScript version to compile to (ES2020 is modern and widely supported)
-    "module": "CommonJS",            // Module system for Node.js
-    "outDir": "./dist",              // Output directory for compiled .js files
-    "rootDir": "./",                 // Root directory of your .ts files
-    "strict": true,                  // Enable strict type checking
-    "esModuleInterop": true,         // For better module interoperability
-    "skipLibCheck": true,            // Skip type checking of declaration files
-    "forceConsistentCasingInFileNames": true // Ensure consistent file casing
+    "target": "ES2020",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["./**/*.ts"],          // Include all .ts files in the project
-  "exclude": ["node_modules"]        // Exclude node_modules
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }
