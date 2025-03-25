@@ -1,5 +1,5 @@
 import { Telegraf } from "telegraf";
-import { MySceneContext } from "../utils/types";
+import { MySceneContext } from "../utils/sessionManager";
 
 export default function infoCommands (bot : Telegraf<MySceneContext>) {
     bot.command("status", (ctx) => {

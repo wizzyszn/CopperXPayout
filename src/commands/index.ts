@@ -1,5 +1,5 @@
 import { Telegraf } from "telegraf";
-import { MySceneContext } from "../utils/types";
+import { MySceneContext } from "../utils/sessionManager";
 import { loginCommand } from "./auth/AuthCommands";
 
 export default function setUpCommands (bot : Telegraf<MySceneContext>) {

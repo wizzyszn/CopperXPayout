@@ -1,8 +1,6 @@
 import { Scenes, session, Telegraf } from "telegraf";
 import * as dotenv from "dotenv";
 import { MySceneContext, sessionManager } from "./utils/sessionManager";
-import loginScene from "./scenes/auth/LoginWithCreds";
-import verifyCodeScene from "./scenes/auth/VerifyCode";
 import { requireAuth } from "./middlewares/Auth";
 import { checkAuthStatus } from "./commands/auth/AuthCommands";
 import {
@@ -16,6 +14,7 @@ import {
   viewBalances,
 } from "./services/copperX.service";
 import { NetworkCoefficients, Networks, TransactionsInt } from "./utils/types";
+import loginWizard from "./wizards/loginWizards";
 
 // Load environment variables first
 dotenv.config();
@@ -33,7 +32,7 @@ if (!BotToken) {
 export const bot = new Telegraf<MySceneContext>(BotToken);
 
 // Register Scenes
-const stage = new Scenes.Stage<MySceneContext>([loginScene, verifyCodeScene]);
+const stage = new Scenes.Stage<MySceneContext>([loginWizard]);
 
 // Configure middleware
 bot.use(session());
@@ -86,13 +85,33 @@ bot.action("back_to_menu", async (ctx) => {
   await ctx.answerCbQuery();
   await mainMenu(ctx);
 });
-// login
+// Handle login via inline button
 bot.action("login", async (ctx) => {
-  await ctx.answerCbQuery();
-  ctx.scene.enter("login");
+  try {
+    await ctx.answerCbQuery("Starting login process...", { show_alert: false });
+    if (ctx.session.isAuthenticated) {
+      await ctx.reply("You’re already logged in!");
+      return;
+    }
+    await ctx.scene.enter("loginWizard");
+  } catch (err) {
+    console.error("Error entering loginWizard from action:", err);
+    await ctx.reply("❌ Something went wrong. Please try again.");
+  }
 });
+
+// Handle login via command
 bot.command("login", async (ctx) => {
-  ctx.scene.enter("login");
+  try {
+    if (ctx.session.isAuthenticated) {
+      await ctx.reply("You’re already logged in!");
+      return;
+    }
+    await ctx.scene.enter("loginWizard");
+  } catch (err) {
+    console.error("Error entering loginWizard from command:", err);
+    await ctx.reply("❌ Something went wrong. Please try again.");
+  }
 });
 //profile
 bot.action("profile", requireAuth, async (ctx) => {

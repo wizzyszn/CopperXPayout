@@ -21,7 +21,7 @@ interface UserInfoInt {
   walletAccountType: string;
 }
 
-interface MySession extends Scenes.SceneSession<Scenes.SceneSessionData> {
+interface MySession extends Scenes.WizardSession {
   email?: string;
   sid?: string;
   otp?: string;
@@ -34,10 +34,10 @@ interface MySession extends Scenes.SceneSession<Scenes.SceneSessionData> {
     walletType: string;
     walletId: string;
     isDefault: boolean;
-    network : Networks
-  }[]
+    network: Networks;
+  }[];
 }
-interface MySceneContext extends Scenes.SceneContext {
+interface MySceneContext extends Scenes.WizardContext {
   session: MySession;
 }
 
@@ -60,20 +60,20 @@ export class sessionManager {
   private static RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
   // method to encrypt sensitive data
-  static EncryptData<T>(data: T): string {
-    const key = Buffer.from(process.env.AES_256_KEY as string, "hex"); // 32-byte Buffer
-    const iv = crypto.randomBytes(16);
-    const algo = "aes-256-ctr";
-    const serializedData =
-      typeof data === "string" ? data : JSON.stringify(data);
-    const cipher = crypto.createCipheriv(algo, key, iv);
-    const encrypted = Buffer.concat([
-      cipher.update(serializedData),
-      cipher.final(),
-    ]);
-    return `${iv.toString("hex")} : ${encrypted.toString("hex")}`;
-  }
-
+// method to encrypt sensitive data
+static EncryptData<T>(data: T): string {
+  const key = Buffer.from(process.env.AES_256_KEY as string, "hex"); // 32-byte Buffer
+  const iv = crypto.randomBytes(16);
+  const algo = "aes-256-ctr";
+  const serializedData =
+    typeof data === "string" ? data : JSON.stringify(data);
+  const cipher = crypto.createCipheriv(algo, key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(serializedData),
+    cipher.final(),
+  ]);
+  return `${iv.toString("hex")} : ${encrypted.toString("hex")}`;
+}
   //method to decrypt stored sensitive data
   static DecryptData<T>(data: string): T {
     const key = Buffer.from(process.env.AES_256_KEY as string, "hex");
@@ -116,7 +116,7 @@ export class sessionManager {
       return this.DecryptData(authData.token);
     }
     //token expired cleat token
-    this.clearToken;
+    this.clearToken(ctx)//fixed
     return null;
   }
 
@@ -127,11 +127,10 @@ export class sessionManager {
     ctx.session.isAuthenticated = false;
   }
   // Check if rate limit is exceeded
- /* static checkRateLimit(userId: string): boolean {
+  static checkRateLimit(userId: string): boolean {
     const now = Date.now();
     const userLimit = this.rateLimitMap.get(userId);
-
-    // First request or limit period expired
+  
     if (!userLimit || userLimit.resetAt < now) {
       this.rateLimitMap.set(userId, {
         count: 1,
@@ -139,15 +138,10 @@ export class sessionManager {
       });
       return false;
     }
-
-    // Increment counter
+  
     userLimit.count += 1;
+    this.rateLimitMap.set(userId, userLimit); // Persist updated count
+    return userLimit.count > this.MAX_REQUESTS;
+  }
 
-    // Check if limit exceeded
-    if (userLimit.count > this.MAX_REQUESTS) {
-      return true;
-    }
-
-    return false;
-  } */
 }
