@@ -2,6 +2,9 @@
   "name": "copperxpayout",
   "version": "1.0.0",
   "description": "Telegram Bot for CopperXPayout which will enable users to deposit, withdraw, and transfer USDC directly through Telegram without visiting their web app.",
+  "engines": {
+    "node": "18.x"  
+  },
   "main": "index.js",
   
     "scripts": {
