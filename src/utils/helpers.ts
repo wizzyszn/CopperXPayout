@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { MySceneContext } from "./sessionManager";
 dotenv.config();
 // -> Generate token using JWT
 const generateToken = (userId: number): string => {
@@ -18,7 +19,16 @@ const verifyToken = (token : string) : {userId : number} | null =>{
         return null
     }
   }
+  
+// Helper function to handle cancellation
+const cancelOperation = async (ctx: MySceneContext, input: string, replyMsg : string) => {
+  if (input.toLowerCase() === "cancel") {
+    await ctx.reply(replyMsg);
+    return ctx.scene.leave();
+  }
+};
 export {
     generateToken,
-    verifyToken
+    verifyToken,
+    cancelOperation
 }

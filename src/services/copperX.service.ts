@@ -141,6 +141,11 @@ const addPayee = (
   const url = urlGenerator("payees", "", false);
   return requestHandler<Payee>(url, options("POST", data, token));
 };
+// get a particular payee
+const getPayee = (token : string,payeeId : string) =>{
+const url = urlGenerator("payees",`${payeeId}`,false);
+return requestHandler<Payee>(url,options("GET",null,token))
+}
 // Logout
 const logout = (token: string) => {
   const url = urlGenerator("auth", "logout");
@@ -161,5 +166,6 @@ export {
   viewBalances,
   transactionHistoryReq,
   getAllPayees,
-  addPayee
+  addPayee,
+  getPayee
 };

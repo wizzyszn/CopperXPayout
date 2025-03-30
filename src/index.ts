@@ -5,6 +5,7 @@ import { requireAuth } from "./middlewares/Auth";
 import { checkAuthStatus } from "./commands/auth/AuthCommands";
 import {
   getAllPayees,
+  getPayee,
   getWallets,
   logout,
   requestKYCstatus,
@@ -15,6 +16,8 @@ import {
 } from "./services/copperX.service";
 import { NetworkCoefficients, Networks, TransactionsInt } from "./utils/types";
 import loginWizard from "./wizards/loginWizards";
+import transferViaEmailWizard from "./wizards/TransferViaEmail";
+import addPayeeWizard from "./wizards/AddPayee";
 
 // Load environment variables first
 dotenv.config();
@@ -30,9 +33,12 @@ if (!BotToken) {
 
 // Instantiate Bot
 export const bot = new Telegraf<MySceneContext>(BotToken);
-
 // Register Scenes
-const stage = new Scenes.Stage<MySceneContext>([loginWizard]);
+const stage = new Scenes.Stage<MySceneContext>([
+  loginWizard,
+  transferViaEmailWizard,
+  addPayeeWizard,
+]);
 
 // Configure middleware
 bot.use(session());
@@ -463,7 +469,7 @@ bot.action("transactions", async (ctx) => {
     );
   }
 });
-bot.command("send_money", async (ctx) => {
+bot.action("send_money", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.editMessageText(
     `📤 Send Money
@@ -500,20 +506,79 @@ bot.action("send_via_email", async (ctx) => {
           },
         }
       );
-    }else{
-      //do somehtitng here...
+    } else {
+      const payeeBtns = payees.map((payee) => {
+        return [
+          {
+            text: `${payee.displayName} (${payee.email})`,
+            callback_data: `payee_id:${payee.id}`,
+          },
+        ];
+      });
+      return ctx.reply(
+        "Send USDC via Email\n\nChoose a payee to send USDC to:",
+        {
+          reply_markup: {
+            inline_keyboard: [...payeeBtns],
+          },
+        }
+      );
     }
   } catch (err) {
     console.error(err);
     ctx.reply(`Something went wrong while fetching your payees.... ${err}`);
   }
 });
-// Add a payee
-bot.action("add_payee", async (ctx) =>{
+//send to a payee via email
+bot.action(/payee_id:(.+)/, requireAuth, async (ctx) => {
   await ctx.answerCbQuery();
-  
+  const payeeId = ctx.match[1];
+  ctx.scene.enter("tf_via_email",{payeeId});
 
-})
+});
+// Add a payee
+bot.action("add_payee", requireAuth, async (ctx) => {
+  await ctx.answerCbQuery();
+  // Command to start the wizard
+  bot.command("addpayee", (ctx) => ctx.scene.enter("addpayee"));
+
+  // Handle addpayee action
+  bot.action("cancel_add_payee", async (ctx) => {
+    await ctx.reply("Add payee cancelled");
+    return ctx.scene.leave();
+  });
+  // Handle cancel send via email op
+  bot.action("cancel_send_via_email", async (ctx) => {
+    await ctx.reply("Send Via Email Cancelled");
+    return ctx.scene.leave();
+  });
+
+  // Handle Back buttons
+  const backActions: { [key: string]: number } = {
+    back_to_nickname: 0, // Step 1: Nickname
+    back_to_email: 2, // Step 3: Email
+    back_to_firstname: 4, // Step 5: First Name
+    back_to_lastname: 6, // Step 7: Last Name
+    back_to_phonenumber: 8, // Step 9: Phone Number
+    back_to_country: 10, // Step 11: Country
+    back_to_bankname: 12, // Step 13: Bank Name
+    back_to_bankaddress: 14, // Step 15: Bank Address
+    back_to_type: 16, // Step 17: Type
+    back_to_bankaccounttype: 18, // Step 19: Bank Account Type
+    back_to_routingnumber: 20, // Step 21: Routing Number
+    back_to_accountnumber: 22, // Step 23: Account Number
+    back_to_beneficiaryname: 24, // Step 25: Beneficiary Name
+    back_to_beneficiaryaddress: 26, // Step 27: Beneficiary Address
+    back_to_swiftcode: 28, // Step 29: SWIFT Code
+  };
+
+  Object.keys(backActions).forEach((action) => {
+    bot.action(action, async (ctx) => {
+      await ctx.answerCbQuery("Going back...");
+      return ctx.wizard.selectStep(backActions[action]);
+    });
+  });
+});
 //logout
 bot.action("logout", requireAuth, async (ctx) => {
   await ctx.answerCbQuery();

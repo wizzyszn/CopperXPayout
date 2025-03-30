@@ -97,7 +97,7 @@ const loginWizard = new Scenes.WizardScene<MySceneContext>(
                   { text: "💰 Balance", callback_data: "view_balances" },
                 ],
                 [
-                  { text: "📤 Send Money", callback_data: "send" },
+                  { text: "📤 Send Money", callback_data: "send_money" },
                   { text: "📥 Deposit", callback_data: "deposit" },
                 ],
                 [{ text: "📒 Transactions", callback_data: "transactions" }],

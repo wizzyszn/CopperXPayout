@@ -37,8 +37,37 @@ interface MySession extends Scenes.WizardSession {
     network: Networks;
   }[];
 }
+export interface SceneState {
+  payeeId?: string;
+}
 interface MySceneContext extends Scenes.WizardContext {
+  state: SceneState; 
   session: MySession;
+  wizard: Scenes.WizardContext["wizard"] & {
+    state: {
+      payee?: {
+        email?: string;
+        nickName?: string;
+        phoneNumber ?: string;
+        firstName?: string;
+        lastName?: string;
+        country?: string;
+        bankName?: string;
+        bankAddress?: string;
+        type?: string;
+        bankAccountType?: string;
+        bankRoutingNumber?: string;
+        bankAccountNumber?: string;
+        bankBeneficiaryName?: string;
+        bankBeneficiaryAddress?: string;
+        swiftCode?: string;
+      };
+      transferToPayee?:{
+        payeeId?: string
+        payeeEmail?: string
+      } 
+    };
+  };
 }
 
 interface AuthDataInt {
@@ -60,20 +89,20 @@ export class sessionManager {
   private static RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
   // method to encrypt sensitive data
-// method to encrypt sensitive data
-static EncryptData<T>(data: T): string {
-  const key = Buffer.from(process.env.AES_256_KEY as string, "hex"); // 32-byte Buffer
-  const iv = crypto.randomBytes(16);
-  const algo = "aes-256-ctr";
-  const serializedData =
-    typeof data === "string" ? data : JSON.stringify(data);
-  const cipher = crypto.createCipheriv(algo, key, iv);
-  const encrypted = Buffer.concat([
-    cipher.update(serializedData),
-    cipher.final(),
-  ]);
-  return `${iv.toString("hex")} : ${encrypted.toString("hex")}`;
-}
+  // method to encrypt sensitive data
+  static EncryptData<T>(data: T): string {
+    const key = Buffer.from(process.env.AES_256_KEY as string, "hex"); // 32-byte Buffer
+    const iv = crypto.randomBytes(16);
+    const algo = "aes-256-ctr";
+    const serializedData =
+      typeof data === "string" ? data : JSON.stringify(data);
+    const cipher = crypto.createCipheriv(algo, key, iv);
+    const encrypted = Buffer.concat([
+      cipher.update(serializedData),
+      cipher.final(),
+    ]);
+    return `${iv.toString("hex")} : ${encrypted.toString("hex")}`;
+  }
   //method to decrypt stored sensitive data
   static DecryptData<T>(data: string): T {
     const key = Buffer.from(process.env.AES_256_KEY as string, "hex");
@@ -116,7 +145,7 @@ static EncryptData<T>(data: T): string {
       return this.DecryptData(authData.token);
     }
     //token expired cleat token
-    this.clearToken(ctx)//fixed
+    this.clearToken(ctx); //fixed
     return null;
   }
 
@@ -130,7 +159,7 @@ static EncryptData<T>(data: T): string {
   static checkRateLimit(userId: string): boolean {
     const now = Date.now();
     const userLimit = this.rateLimitMap.get(userId);
-  
+
     if (!userLimit || userLimit.resetAt < now) {
       this.rateLimitMap.set(userId, {
         count: 1,
@@ -138,10 +167,9 @@ static EncryptData<T>(data: T): string {
       });
       return false;
     }
-  
+
     userLimit.count += 1;
     this.rateLimitMap.set(userId, userLimit); // Persist updated count
     return userLimit.count > this.MAX_REQUESTS;
   }
-
 }
